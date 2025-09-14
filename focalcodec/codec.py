@@ -975,8 +975,8 @@ def test_offline(
     ]
     matching_set = {k: [] for k in paths}
     for path in paths:
-        for filename in os.listdir(os.path.join(root_dir, "audio-samples", path)):
-            filepath = os.path.join(root_dir, "audio-samples", path, filename)
+        for filename in os.listdir(os.path.join(root_dir, "audios", path)):
+            filepath = os.path.join(root_dir, "audios", path, filename)
             sig, sample_rate = torchaudio.load(filepath)
             sig = torchaudio.functional.resample(sig, sample_rate, 16000)
             sig = sig.to(device)
@@ -986,7 +986,7 @@ def test_offline(
 
     sig, sample_rate = torchaudio.load(
         os.path.join(
-            root_dir, "audio-samples", "librispeech-dev-clean", "251-118436-0003.wav"
+            root_dir, "audios", "librispeech-dev-clean", "251-118436-0003.wav"
         )
     )
     sig = torchaudio.functional.resample(sig, sample_rate, 16000)
@@ -1096,8 +1096,8 @@ def test_online(
     ]
     matching_set = {k: [] for k in paths}
     for path in paths:
-        for filename in os.listdir(os.path.join(root_dir, "audio-samples", path)):
-            filepath = os.path.join(root_dir, "audio-samples", path, filename)
+        for filename in os.listdir(os.path.join(root_dir, "audios", path)):
+            filepath = os.path.join(root_dir, "audios", path, filename)
             sig, sample_rate = torchaudio.load(filepath)
             sig = torchaudio.functional.resample(sig, sample_rate, 16000)
             sig = sig.to(device)
@@ -1107,7 +1107,7 @@ def test_online(
 
     sig, sample_rate = torchaudio.load(
         os.path.join(
-            root_dir, "audio-samples", "librispeech-dev-clean", "251-118436-0003.wav"
+            root_dir, "audios", "librispeech-dev-clean", "251-118436-0003.wav"
         )
     )
     sig = torchaudio.functional.resample(sig, sample_rate, 16000)

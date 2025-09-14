@@ -11,7 +11,7 @@ A low-bitrate single-codebook 16 kHz speech codec based on [focal modulation](ht
 
 - 🔊 **Downstream Tasks**: https://github.com/lucadellalib/audiocodecs
 
-<img src="docs/_static/images/focalcodec.png" width="700">
+<img src="focalcodec.png" width="700">
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -37,7 +37,7 @@ pip install huggingface-hub safetensors soundfile torch torchaudio
 
 ## ▶️ Quickstart
 
-**NOTE**: the `audio-samples` directory contains audio samples that you can download and use to test the codec.
+**NOTE**: the `audios` directory contains audio samples that you can download and use to test the codec.
 
 You can easily load the model using `torch.hub` without cloning the repository:
 
@@ -53,7 +53,7 @@ codec = torch.hub.load(
 codec.eval().requires_grad_(False)
 
 # Load and preprocess the input audio
-audio_file = "audio-samples/librispeech-dev-clean/251-118436-0003.wav"
+audio_file = "audios/librispeech-dev-clean/251-118436-0003.wav"
 sig, sample_rate = torchaudio.load(audio_file)
 sig = torchaudio.functional.resample(sig, sample_rate, codec.sample_rate)
 
@@ -102,7 +102,7 @@ Clone or download and extract the repository, navigate to `<path-to-repository>`
 
 ```bash
 python demo.py \
---input_file audio-samples/librispeech-dev-clean/251-118436-0003.wav \
+--input_file audios/librispeech-dev-clean/251-118436-0003.wav \
 --output_file reconstruction.wav
 ```
 
@@ -110,9 +110,9 @@ python demo.py \
 
 ```bash
 python demo.py \
---input_file audio-samples/librispeech-dev-clean/251-118436-0003.wav \
+--input_file audios/librispeech-dev-clean/251-118436-0003.wav \
 --output_file reconstruction.wav \
---reference_files audio-samples/librispeech-dev-clean/84
+--reference_files audios/librispeech-dev-clean/84
 ```
 
 ---------------------------------------------------------------------------------------------------------
