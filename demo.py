@@ -39,7 +39,7 @@ def main(
 ) -> "None":
     # Load FocalCodec model
     codec = torch.hub.load(
-        "lucadellalib/focalcodec", "focalcodec", config=config, force_reload=True
+        "lucadellalib/focalcodec:v0.0.1", "focalcodec", config=config, force_reload=True
     )
     codec.eval().requires_grad_(False)
 

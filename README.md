@@ -19,7 +19,7 @@ A low-bitrate single-codebook 16 kHz speech codec based on [focal modulation](ht
 
 |                                       Checkpoint                                        | Token Rate (Hz) | Bitrate (kbps) |   Dataset   |
 |:---------------------------------------------------------------------------------------:|:---------------:|:--------------:|:-----------:|
-|   [lucadellalib/focalcodec_50hz](https://huggingface.co/lucadellalib/focalcodec_50hz)   |       50.0      |      0.65      | LibriTTS960 |
+|   [lucadellalib/focalcodec_50hz](https://huggingface.co/lucadellalib/focalcodec_50hz)   |      50.0       |      0.65      | LibriTTS960 |
 |   [lucadellalib/focalcodec_25hz](https://huggingface.co/lucadellalib/focalcodec_25hz)   |      25.0       |      0.33      | LibriTTS960 |
 | [lucadellalib/focalcodec_12_5hz](https://huggingface.co/lucadellalib/focalcodec_12_5hz) |      12.5       |      0.16      | LibriTTS960 |
 
@@ -48,7 +48,7 @@ import torchaudio
 # Load FocalCodec model
 config = "lucadellalib/focalcodec_50hz"
 codec = torch.hub.load(
-    "lucadellalib/focalcodec", "focalcodec", config=config, force_reload=True
+    "lucadellalib/focalcodec:v0.0.1", "focalcodec", config=config, force_reload=True
 )
 codec.eval().requires_grad_(False)
 
@@ -78,7 +78,7 @@ torchaudio.save("reconstruction.wav", rec_sig, sample_rate)
 Alternatively, you can install FocalCodec as a standard Python package using `pip`:
 
 ```bash
-pip install focalcodec@git+https://github.com/lucadellalib/focalcodec.git@main#egg=focalcodec
+pip install focalcodec@git+https://github.com/lucadellalib/focalcodec.git@v0.0.1#egg=focalcodec
 ```
 
 Once installed, you can import it in your scripts:

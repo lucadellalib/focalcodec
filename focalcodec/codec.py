@@ -985,9 +985,7 @@ def test_offline(
         matching_set[path] = torch.cat(matching_set[path])
 
     sig, sample_rate = torchaudio.load(
-        os.path.join(
-            root_dir, "audios", "librispeech-dev-clean", "251-118436-0003.wav"
-        )
+        os.path.join(root_dir, "audios", "librispeech-dev-clean", "251-118436-0003.wav")
     )
     sig = torchaudio.functional.resample(sig, sample_rate, 16000)
     sig = sig.to(device)
@@ -1106,9 +1104,7 @@ def test_online(
         matching_set[path] = torch.cat(matching_set[path])
 
     sig, sample_rate = torchaudio.load(
-        os.path.join(
-            root_dir, "audios", "librispeech-dev-clean", "251-118436-0003.wav"
-        )
+        os.path.join(root_dir, "audios", "librispeech-dev-clean", "251-118436-0003.wav")
     )
     sig = torchaudio.functional.resample(sig, sample_rate, 16000)
     sig = sig.to(device)
