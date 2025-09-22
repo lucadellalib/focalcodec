@@ -131,7 +131,7 @@ It can be loaded via `torch.hub` as `repo_or_dir="lucadellalib/focalcodec:v0.0.1
 
 ---------------------------------------------------------------------------------------------------------
 
-## 🎤 Running the Demo
+## 🎤 Running the Demo [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lucadellalib/focalcodec/blob/main/demo.ipynb)
 
 Clone or download and extract the repository, navigate to `<path-to-repository>`, open a terminal and run one of the following commands.
 
