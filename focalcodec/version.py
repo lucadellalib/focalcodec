@@ -28,7 +28,7 @@ _MINOR = (
     "0"  # Minor version to increment in case of backward compatible new functionality
 )
 
-_PATCH = "1"  # Patch version to increment in case of backward compatible bug fixes
+_PATCH = "2"  # Patch version to increment in case of backward compatible bug fixes
 
 VERSION = f"{_MAJOR}.{_MINOR}.{_PATCH}"
 """The package version."""

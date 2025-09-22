@@ -16,7 +16,7 @@
 
 """PyTorch Hub entry point."""
 
-from typing import Any
+from typing import Any, Dict, Optional
 
 from focalcodec import FocalCodec
 
@@ -32,6 +32,7 @@ dependencies = [
 def focalcodec(
     config: "str" = "lucadellalib/focalcodec_50hz",
     pretrained: "bool" = True,
+    overrides: "Optional[Dict[str, Any]]" = None,
     **kwargs: "Any",
 ) -> "FocalCodec":
     """Load FocalCodec.
@@ -50,9 +51,15 @@ def focalcodec(
             path or URL as the configuration file but with a `.safetensors` or `.pt` extension.
           - If True and a Hugging Face repository is provided, it is assumed that either "model.safetensors"
             or "model.pt" is available.
+    overrides:
+        Dictionary mapping dot-separated key paths to new values that override entries in the nested configuration.
+        For example, {"encoder_config.max_cached_steps": 0}.
+    kwargs:
+        Additional keyword arguments to pass to `huggingface_hub.hf_hub_download` if
+        fetching the configuration from a remote repository.
 
     """
-    codec = FocalCodec.from_config(config, pretrained, **kwargs)
+    codec = FocalCodec.from_config(config, pretrained, overrides, **kwargs)
     return codec
 
 
@@ -61,5 +68,5 @@ if __name__ == "__main__":
     print(model)
     print(
         f"Total number of parameters/buffers: "
-        f"{sum([x.numel() for x in model.state_dict().values()]) / 1e6:.2f} M"
+        f"{sum([x.numel() for x in model.state_dict().values()]) / 1e6:.2f}M"
     )

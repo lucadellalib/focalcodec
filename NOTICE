@@ -105,7 +105,7 @@ SOFTWARE
 
 #############################################################################################################################################################
 
-5. Code in focalcodec/vocos.py adapted from:
+5. Code in focalcodec/{vocos, wavenext}.py adapted from:
    https://github.com/gemelo-ai/vocos/tree/v0.1.0/vocos/heads.py
    https://github.com/gemelo-ai/vocos/tree/v0.1.0/vocos/models.py
    https://github.com/gemelo-ai/vocos/tree/v0.1.0/vocos/modules.py

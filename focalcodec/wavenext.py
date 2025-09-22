@@ -7,6 +7,7 @@
 #
 #     https://www.apache.org/licenses/LICENSE-2.0
 #
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,22 +15,20 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Vocos (see https://arxiv.org/abs/2306.00814)."""
+"""WaveNeXt (see https://ieeexplore.ieee.org/document/10389765)."""
 
 # Adapted from:
 # https://github.com/gemelo-ai/vocos/tree/v0.1.0/vocos/heads.py
 # https://github.com/gemelo-ai/vocos/tree/v0.1.0/vocos/models.py
 # https://github.com/gemelo-ai/vocos/tree/v0.1.0/vocos/modules.py
-# https://github.com/gemelo-ai/vocos/tree/v0.1.0/vocos/spectral_ops.py
 
-import warnings
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import torch
 from torch import Tensor, nn
 
 
-__all__ = ["Vocos"]
+__all__ = ["WaveNeXt"]
 
 
 class ConvNeXtBlock(nn.Module):
@@ -52,8 +51,8 @@ class ConvNeXtBlock(nn.Module):
 
     def __init__(
         self,
-        dim: "int" = 512,
-        ffn_dim: "int" = 1536,
+        dim: "int" = 1024,
+        ffn_dim: "int" = 2048,
         kernel_size: "int" = 7,
         layerscale_init: "Optional[float]" = None,
         causal: "bool" = False,
@@ -108,7 +107,7 @@ class ConvNeXtBlock(nn.Module):
         orig_input = input
         if self.causal:
             if left_context is None:
-                input = nn.functional.pad(input, [self.causal_pad, 0], mode="replicate")
+                input = nn.functional.pad(input, [self.causal_pad, 0], mode="constant")
             else:
                 left_context = left_context.permute(0, 2, 1)
                 input = torch.cat([left_context, input], dim=-1)
@@ -130,8 +129,8 @@ class ConvNeXtBlock(nn.Module):
         return output, left_context
 
 
-class VocosBackbone(nn.Module):
-    """Vocos backbone.
+class WaveNeXtBackbone(nn.Module):
+    """WaveNeXt backbone.
 
     Parameters
     ----------
@@ -156,8 +155,8 @@ class VocosBackbone(nn.Module):
         self,
         input_dim: "int" = 1024,
         num_layers: "int" = 8,
-        dim: "int" = 512,
-        ffn_dim: "int" = 1536,
+        dim: "int" = 1024,
+        ffn_dim: "int" = 2048,
         kernel_size: "int" = 7,
         layerscale_init: "Optional[float]" = None,
         causal: "bool" = False,
@@ -211,7 +210,7 @@ class VocosBackbone(nn.Module):
         left_context_embedding = None if left_contexts is None else left_contexts[0]
         if self.causal:
             if left_context_embedding is None:
-                input = nn.functional.pad(input, [self.causal_pad, 0], mode="replicate")
+                input = nn.functional.pad(input, [self.causal_pad, 0], mode="constant")
             else:
                 left_context_embedding = left_context_embedding.permute(0, 2, 1)
                 input = torch.cat([left_context_embedding, input], dim=-1)
@@ -232,129 +231,29 @@ class VocosBackbone(nn.Module):
         return output, new_left_contexts
 
 
-class ISTFT(nn.Module):
-    """Custom implementation of inverse STFT with support for non-causal and causal padding.
-
-    Parameters
-    ----------
-    n_fft:
-        Size of Fourier transform.
-    hop_length:
-        Distance between neighboring sliding window frames.
-    win_length:
-        Size of window frame and STFT filter.
-    causal:
-        Whether the module should be causal.
-
-    """
-
-    def __init__(
-        self,
-        n_fft: "int" = 1024,
-        hop_length: "int" = 320,
-        win_length: "int" = 1024,
-        causal: "bool" = False,
-    ) -> "None":
-        super().__init__()
-        self.n_fft = n_fft
-        self.hop_length = hop_length
-        self.win_length = win_length
-        self.causal = causal
-        self.non_causal_pad = (win_length - hop_length) // 2
-
-        # Buffers (JIT compilable)
-        window = torch.hann_window(win_length)
-        self.register_buffer("window", window, persistent=False)
-        self.register_buffer("window_sq", window**2, persistent=False)
-
-    def forward(self, input: "Tensor") -> "Tensor":
-        """Forward pass.
-
-        Parameters
-        ----------
-        input:
-            Input tensor of shape (batch_size, seq_length, n_fft // 2 + 1).
-
-        Returns
-        -------
-            Output tensor of shape (batch_size, seq_length * hop_length).
-
-        """
-        # Inverse FFT
-        input = input.permute(0, 2, 1)
-        ifft = torch.fft.irfft(input, self.n_fft, dim=1, norm="backward")
-
-        if self.causal:
-            output = ifft[:, -self.hop_length :].permute(0, 2, 1)
-            output = output.flatten(start_dim=1)
-            return output
-
-        # Overlap-add
-        T = input.shape[-1]
-        ifft = ifft * self.window[None, :, None]
-        output_size = (T - 1) * self.hop_length + self.win_length
-        output = nn.functional.fold(
-            ifft,
-            output_size=(1, output_size),
-            kernel_size=(1, self.win_length),
-            stride=(1, self.hop_length),
-        )[:, 0, 0, self.non_causal_pad : -self.non_causal_pad]
-
-        # Window envelope
-        window_sq = self.window_sq.expand(1, T, -1).permute(0, 2, 1)
-        window_envelope = nn.functional.fold(
-            window_sq,
-            output_size=(1, output_size),
-            kernel_size=(1, self.win_length),
-            stride=(1, self.hop_length),
-        )[0, 0, 0, self.non_causal_pad : -self.non_causal_pad]
-
-        # Normalize
-        output /= window_envelope
-
-        return output
-
-    def __repr__(self) -> "str":
-        return (
-            f"{self.__class__.__name__}("
-            f"n_fft={self.n_fft}, "
-            f"hop_length={self.hop_length}, "
-            f"win_length={self.win_length})"
-        )
-
-
-class ISTFTHead(nn.Module):
-    """Inverse STFT head.
+class WaveNeXtHead(nn.Module):
+    """WaveNeXt head.
 
     Parameters
     ----------
     dim:
         Number of input channels.
-    n_fft:
-        Size of Fourier transform.
     hop_length:
         Distance between neighboring sliding window frames.
-    causal:
-        Whether the module should be causal.
 
     """
 
     def __init__(
         self,
-        dim: "int" = 512,
-        n_fft: "int" = 1024,
-        hop_length: "int" = 320,
-        causal: "bool" = False,
+        dim: "int" = 1024,
+        hop_length: "int" = 480,
     ) -> "None":
         super().__init__()
         self.dim = dim
-        self.n_fft = n_fft
         self.hop_length = hop_length
-        self.causal = causal
 
         # Modules
-        self.proj = nn.Linear(dim, n_fft + 2)
-        self.istft = ISTFT(n_fft, hop_length, n_fft, causal)
+        self.proj = nn.Linear(dim, hop_length)
 
     def forward(self, input: "Tensor") -> "Tensor":
         """Forward pass.
@@ -366,23 +265,17 @@ class ISTFTHead(nn.Module):
 
         Returns
         -------
-            Output tensor of shape (batch_size, seq_length * hop_length).
+            Output tensor of shape (batch_size, seq_length * hop_length);
 
         """
         output = self.proj(input)
-        mag, phase = output.chunk(2, dim=-1)
-        mag = mag.exp()
-        # Safeguard to prevent excessively large magnitudes
-        mag = mag.clamp(max=1e2)
-        # Real and imaginary value
-        # JIT compilable
-        stft = mag * torch.complex(phase.cos(), phase.sin())
-        output = self.istft(stft)
+        output = output.reshape(output.shape[0], -1)
+        output = output.clamp(min=-1.0, max=1.0)
         return output
 
 
-class Vocos(nn.Module):
-    """Vocos generator for waveform synthesis.
+class WaveNeXt(nn.Module):
+    """WaveNeXt generator for waveform synthesis.
 
     Parameters
     ----------
@@ -398,8 +291,6 @@ class Vocos(nn.Module):
         Size of the convolutional kernel.
     layerscale_init:
         Initial value for layer scaling parameter.
-    n_fft:
-        Size of Fourier transform.
     hop_length:
         Distance between neighboring sliding window frames.
     causal:
@@ -411,43 +302,27 @@ class Vocos(nn.Module):
         self,
         input_dim: "int" = 1024,
         num_layers: "int" = 8,
-        dim: "int" = 512,
-        ffn_dim: "int" = 1536,
+        dim: "int" = 1024,
+        ffn_dim: "int" = 2048,
         kernel_size: "int" = 7,
         layerscale_init: "Optional[float]" = None,
-        n_fft: "int" = 1024,
-        hop_length: "int" = 320,
+        hop_length: "int" = 480,
         causal: "bool" = False,
-        **kwargs: "Any",
     ) -> "None":
         super().__init__()
-        if kwargs.get("input_channels", None) is not None:
-            warnings.warn(
-                "`input_channels` is deprecated, please use `input_dim` instead",
-                DeprecationWarning,
-            )
-            input_dim = kwargs["input_channels"]
-        if kwargs.get("padding", None) is not None:
-            warnings.warn(
-                "`padding` is deprecated and no longer used. It is now automatically set "
-                'to "causal" if the model is causal, "same" otherwise',
-                DeprecationWarning,
-            )
-
         self.input_dim = input_dim
         self.num_layers = num_layers
         self.dim = dim
         self.ffn_dim = ffn_dim
         self.kernel_size = kernel_size
         self.layerscale_init = layerscale_init or 1 / num_layers
-        self.n_fft = n_fft
         self.hop_length = hop_length
         self.causal = causal
         self.upsample_factor = hop_length
         self.chunk_size = 1
 
         # Modules
-        self.backbone = VocosBackbone(
+        self.backbone = WaveNeXtBackbone(
             input_dim,
             num_layers,
             dim,
@@ -456,7 +331,7 @@ class Vocos(nn.Module):
             layerscale_init,
             causal,
         )
-        self.head = ISTFTHead(dim, n_fft, hop_length, causal)
+        self.head = WaveNeXtHead(dim, hop_length)
 
     def forward(
         self,
@@ -491,7 +366,7 @@ def test_model() -> "None":
 
     B = 3
     T = 50
-    model = Vocos(causal=True).to(device)
+    model = WaveNeXt(causal=True).to(device)
     print(
         f"Model size: {sum([x.numel() for x in model.state_dict().values()]) / 1e6:.2f}M"
     )
@@ -522,7 +397,7 @@ def test_batch_invariance() -> "None":
 
     B = 10
     T = 50
-    model = Vocos(causal=True).to(device)
+    model = WaveNeXt(causal=True).to(device)
 
     input = torch.randn(B, T, 1024, device=device)
     batch_output, batch_left_contexts = model(input)
@@ -551,7 +426,7 @@ def test_causality() -> "None":
 
     B = 3
     T = 10
-    model = Vocos(causal=True).to(device)
+    model = WaveNeXt(causal=True).to(device)
 
     input = torch.randn(B, T, 1024, device=device)
     model = torch.jit.script(model)
@@ -559,7 +434,7 @@ def test_causality() -> "None":
 
     incremental_output = []
     state = []
-    chunk_size = 1
+    chunk_size = model.chunk_size
     i = 0
     while i < T:
         output_i, *state = model(input[:, i : i + chunk_size], *state)
@@ -584,7 +459,7 @@ def test_onnx() -> "None":
 
     B = 3
     T = 50
-    model = Vocos(causal=True).eval().to(device)
+    model = WaveNeXt(causal=True).eval().to(device)
 
     input = torch.randn(B, T, 1024, device=device)
     _, left_contexts = model(input)
