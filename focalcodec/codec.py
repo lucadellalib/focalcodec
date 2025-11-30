@@ -1175,7 +1175,7 @@ class FocalCodec(nn.Module):
         Parameters
         ----------
         f:
-            Path to the output ONNX model file. E.g. “model.onnx”.
+            Path to the output ONNX model file (e.g. “model.onnx”).
         batch_size:
             Batch size to use during ONNX inference.
             If None, the batch dimension will be exported as dynamic in the ONNX model.
@@ -1193,6 +1193,10 @@ class FocalCodec(nn.Module):
         ValueError
             If `return_state` is True but the model is not causal. This combination is invalid
             because non-causal models do not track internal state when exporting to ONNX.
+
+        Warnings
+        --------
+        The `length` argument is not supported (it is always assumed to be 1).
 
         """
 
@@ -1220,7 +1224,10 @@ class FocalCodec(nn.Module):
             if batch_size is None:
                 axes[0] = "batch"
             if chunk_size is None:
-                axes[1] = "time"
+                if name in ["sig", "rec_sig"]:
+                    axes[1] = "time"
+                elif name in ["toks", "codes"]:
+                    axes[1] = "latent_time"
             if axes:
                 dynamic_axes[name] = axes
 
@@ -1257,10 +1264,9 @@ class FocalCodec(nn.Module):
                     dynamic_axes[f"input_state.{i}"] = {0: "batch"}
                     dynamic_axes[f"output_state.{i}"] = {0: "batch"}
 
-        length = torch.ones(B, device=device)
         torch.onnx.export(
             model,
-            (sig, *state, length, return_state),
+            (sig, *state, {"return_state": return_state}),
             f,
             input_names=[
                 "sig",
@@ -1773,7 +1779,7 @@ def test_onnx(config: "Optional[str]" = None) -> "None":
     # Avoid reference cycles
     try:
         _, _, *template = model(
-            torch.tensor(inputs_ort["sig"], device=device), return_state=True
+            torch.tensor(inputs_ort["sig"], device=device), return_state=model.causal
         )
         inputs_torch = _unflatten(template, iter(inputs_ort.values()))
     finally:

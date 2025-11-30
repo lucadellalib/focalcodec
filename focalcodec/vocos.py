@@ -292,7 +292,7 @@ class ISTFT(nn.Module):
         # Overlap-add
         T = input.shape[-1]
         ifft = ifft * self.window[None, :, None]
-        output_size = (T - 1) * self.hop_length + self.win_length
+        output_size = int((T - 1) * self.hop_length + self.win_length)
         output = nn.functional.fold(
             ifft,
             output_size=(1, output_size),

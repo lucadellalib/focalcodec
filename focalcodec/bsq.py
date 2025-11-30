@@ -54,9 +54,9 @@ class BinarySphericalQuantizer(nn.Module):
             "mask", 2 ** torch.arange(self.dim - 1, -1, -1), persistent=False
         )
         all_codes = torch.arange(codebook_size)
-        bits = ((all_codes[..., None].int() & self.mask) != 0).float()
+        bits = (all_codes[..., None].int() & self.mask) != 0
         codebook = self._bits_to_codes(bits) * self.codebook_value
-        self.register_buffer("codebook", codebook.float(), persistent=False)
+        self.register_buffer("codebook", codebook, persistent=False)
 
     def forward(self, lats: "Tensor") -> "Tuple[Tensor, Tensor]":
         """Forward pass.

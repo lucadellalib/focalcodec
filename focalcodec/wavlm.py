@@ -845,7 +845,12 @@ class TransformerEncoder(nn.Module):
             key_padding_mask = None
         else:
             B = input.shape[0]
-            abs_length = (length * T).ceil().clamp(max=T).long()
+            abs_length = (
+                (length * T)
+                .ceil()
+                .clamp(max=torch.tensor(T, device=input.device))
+                .long()
+            )
             key_padding_mask = (
                 torch.arange(T, device=input.device).expand(B, T) < abs_length[:, None]
             )

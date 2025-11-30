@@ -5,7 +5,7 @@
 
 A low-bitrate single-codebook 16 / 24 kHz speech codec based on [focal modulation](https://arxiv.org/abs/2203.11926).
 
-- 📜 **Preprints**:
+- 📜 **Papers**:
 
     - [FocalCodec: Low-Bitrate Speech Coding via Focal Modulation Networks](https://arxiv.org/abs/2502.04465)
 
@@ -15,12 +15,15 @@ A low-bitrate single-codebook 16 / 24 kHz speech codec based on [focal modulatio
 
 - 🔊 **Downstream Tasks**: https://github.com/lucadellalib/audiocodecs
 
+- 🛠️ **Training Recipe**: https://github.com/speechbrain/speechbrain/tree/develop/recipes/LibriTTS/focalcodec
+
 <img src="focalcodec.png" width="700">
 
 ---------------------------------------------------------------------------------------------------------
 
 ## 📢 News
 
+- **[2025-11-30]** – 🛠️ Released training recipe in [SpeechBrain](https://github.com/speechbrain/speechbrain/tree/develop/recipes/LibriTTS/focalcodec)
 - **[2025-09-19]** – 📜 Released preprint: [FocalCodec-Stream: Streaming Low-Bitrate Speech Coding via Causal Distillation](https://arxiv.org/abs/2509.16195)
 - **[2025-09-18]** – 🎉 FocalCodec has been accepted at **NeurIPS 2025**!
 - **[2025-02-06]** – 📜 Released preprint: [FocalCodec: Low-Bitrate Speech Coding via Focal Modulation Networks](https://arxiv.org/abs/2502.04465)
@@ -204,14 +207,16 @@ python demo.py \
 
 ## @ Citing
 
-```
-@article{dellalibera2025focalcodec,
-    title   = {{FocalCodec}: Low-Bitrate Speech Coding via Focal Modulation Networks},
-    author  = {Luca {Della Libera} and Francesco Paissan and Cem Subakan and Mirco Ravanelli},
-    journal = {arXiv preprint arXiv:2502.04465},
-    year    = {2025},
+```bibtex
+@inproceedings{dellalibera2025focalcodec,
+    title     = {{FocalCodec}: Low-Bitrate Speech Coding via Focal Modulation Networks},
+    author    = {Luca {Della Libera} and Francesco Paissan and Cem Subakan and Mirco Ravanelli},
+    booktitle = {Advances in Neural Information Processing Systems},
+    year      = {2025},
 }
+```
 
+```bibtex
 @article{dellalibera2025focalcodecstream,
     title   = {{FocalCodec-Stream}: Streaming Low-Bitrate Speech Coding via Causal Distillation},
     author  = {Luca {Della Libera} and Cem Subakan and Mirco Ravanelli},
